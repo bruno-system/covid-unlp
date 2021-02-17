@@ -1,0 +1,12 @@
+{
+  "name": "covid-UNLP",
+  "displayName": "covid-UNLP",
+  "expo": {
+    "name": "covid-UNLP",
+    "slug": "covid-UNLP",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
