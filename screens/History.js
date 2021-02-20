@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
-import {View, Dimensions, AsyncStorage, ScrollView, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import {View, Dimensions, ScrollView, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const DEVICE_WIDTH = Dimensions.get('window').width;
 const COLUMN_WIDTH = Math.floor(DEVICE_WIDTH / 4);

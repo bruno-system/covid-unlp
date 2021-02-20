@@ -1,135 +1,19 @@
 import { StatusBar } from 'expo-status-bar';
-import React, {useState, useEffect} from "react";
-import { StyleSheet, Text, View, Button, Image, Dimensions, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React from "react";
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import Discover from "./screens/Discover";
+import History from "./screens/History";
+
+const Stack = createStackNavigator();
 
 export default function App() {
-
-  const [currentImageUrl, setImageUrl] = useState(null);
-  const [currentImageFavStatus, setImageFavStatus] = useState(false);
-
-  const DOUBLE_PRESS_DELAY = 300;
-  let lastTimeImagePress = null;
-
-  useEffect(() => {
-    // Se ejecuta cuando se monta el componente
-    loadRandomImage();
-  }, []);
-
-  const loadRandomImage = () => {
-    const width = Math.floor(Dimensions.get('window').width);
-    const height = Math.floor(Dimensions.get('window').height);
-    fetch('https://picsum.photos/' + width + '/' + height)
-    .then(async function (response){
-        // guardamos en el state la url de la foto random
-        setImageUrl(response.url);
-
-        // Hay que determinar si la imagen ya es favorita
-        const favImagesJSONStr = await AsyncStorage.getItem('@favImagesJSON', ()=>{});
-        const favImagesJSON = JSON.parse(favImagesJSONStr);
-        const randomImageFavStatus = favImagesJSON !== null && favImagesJSON.urls.includes(response.url);
-        if (randomImageFavStatus !== currentImageFavStatus) {
-            setImageFavStatus(randomImageFavStatus);
-        }
-
-
-    });
-  };
-
-  //Emula el doble tap
-  const imageTap = () => {
-    const now = new Date().getTime();
-
-    if (lastTimeImagePress !== null && (now - lastTimeImagePress) < DOUBLE_PRESS_DELAY) {
-        lastTimeImagePress = null;
-        toggleImageFavStatus().then(() => {});
-    } else {
-        lastTimeImagePress = now;
-    }
-  }
-
-  const toggleImageFavStatus = async () => {
-    const newFavStatus = !currentImageFavStatus;
-
-    const favImagesJSONStr = await AsyncStorage.getItem('@favImagesJSON', ()=>{});
-    let favImagesJSON = JSON.parse(favImagesJSONStr);
-    if (favImagesJSON === null) {
-        favImagesJSON = {
-            urls: []
-        };
-    }
-
-    if (newFavStatus) {
-        // Agregar img al storage
-        favImagesJSON.urls.push(currentImageUrl);
-    } else {
-        // Eliminar img del storage
-        favImagesJSON.urls = favImagesJSON.urls.filter((value) => { return value !== currentImageUrl});
-    }
-
-    await AsyncStorage.setItem('@favImagesJSON', JSON.stringify(favImagesJSON), ()=>{});
-    setImageFavStatus(newFavStatus);
-  }
-
-
-  return (
-    <View style={styles.main}>
-      <TouchableOpacity onPress={imageTap} style={styles.touchableOpacity}>
-          { (currentImageUrl != null) && (
-              <View style={styles.imageHolder}>
-                  
-
-                  <Image style={styles.image} source={{ uri: currentImageUrl }} />
-                  <TouchableOpacity onPress={toggleImageFavStatus} style={styles.favIconTouchableOpacity}>
-                      <Icon
-                          name={ currentImageFavStatus === false ? "heart-o" : "heart" }
-                          size={30}
-                          color={ currentImageFavStatus === false ? "#000" : "#F00" }
-                      />
-                  </TouchableOpacity>
-
-
-                  
-              </View>
-          )}
-      </TouchableOpacity>
-      <View style={styles.footer}>
-          <Button title="Descubrir nueva" onPress={loadRandomImage} />
-          <Button title="Mis favoritas" onPress={() => {}} />
-      </View>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+    return (
+        <NavigationContainer>
+            <Stack.Navigator initialRouteName="Discover">
+                <Stack.Screen name="Discover" component={Discover} options={{ headerShown: false }}/>
+                <Stack.Screen name="History" component={History} />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
 }
-
-const styles = StyleSheet.create({
-  main: {
-      flex: 1,
-      flexDirection: 'column',
-  },
-  touchableOpacity: {
-      flex: 1
-  },
-  imageHolder: {
-      flex: 1
-  },
-  image: {
-      flex: 1
-  },
-  favIconTouchableOpacity: {
-      position: 'absolute',
-      right: 20,
-      top: 40
-  },
-  footer: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      padding: 8,
-  }
-});

@@ -1,11 +1,13 @@
 import React, {useState, useEffect} from "react";
-import {StyleSheet, View, Button, Image, Dimensions, TouchableOpacity, AsyncStorage, Text} from 'react-native';
+import {StyleSheet, View, Button, Image, Dimensions, TouchableOpacity, Text} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import GestureRecognizer from 'react-native-swipe-gestures';
+// import GestureRecognizer from 'react-native-swipe-gestures';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Discover({ navigation }) {
     const [currentImageUrl, setImageUrl] = useState(null);
     const [currentImageFavStatus, setImageFavStatus] = useState(false);
+    
     const [gestureName,setGestureName] = useState('none');
 
     const DOUBLE_PRESS_DELAY = 300;
@@ -28,16 +30,17 @@ export default function Discover({ navigation }) {
             setImageUrl(response.url);
 
             // Hay que determinar si la imagen ya es favorita
-            // const favImagesJSONStr = await AsyncStorage.getItem('@favImagesJSON', ()=>{});
-            // const favImagesJSON = JSON.parse(favImagesJSONStr);
-            // const randomImageFavStatus = favImagesJSON !== null && favImagesJSON.urls.includes(response.url);
-            // if (randomImageFavStatus !== currentImageFavStatus) {
-            //     setImageFavStatus(randomImageFavStatus);
-            // }
+            const favImagesJSONStr = await AsyncStorage.getItem('@favImagesJSON', ()=>{});
+            const favImagesJSON = JSON.parse(favImagesJSONStr);
+            const randomImageFavStatus = favImagesJSON !== null && favImagesJSON.urls.includes(response.url);
+            if (randomImageFavStatus !== currentImageFavStatus) {
+                setImageFavStatus(randomImageFavStatus);
+            }
 
         });
     };
 
+    //Emula el doble tap
     const imageTap = () => {
         const now = new Date().getTime();
 
@@ -50,26 +53,26 @@ export default function Discover({ navigation }) {
     }
 
     const toggleImageFavStatus = async () => {
-        // const newFavStatus = !currentImageFavStatus;
+        const newFavStatus = !currentImageFavStatus;
 
-        // const favImagesJSONStr = await AsyncStorage.getItem('@favImagesJSON', ()=>{});
-        // let favImagesJSON = JSON.parse(favImagesJSONStr);
-        // if (favImagesJSON === null) {
-        //     favImagesJSON = {
-        //         urls: []
-        //     };
-        // }
+        const favImagesJSONStr = await AsyncStorage.getItem('@favImagesJSON', ()=>{});
+        let favImagesJSON = JSON.parse(favImagesJSONStr);
+        if (favImagesJSON === null) {
+            favImagesJSON = {
+                urls: []
+            };
+        }
 
-        // if (newFavStatus) {
-        //     // Agregar img al storage
-        //     favImagesJSON.urls.push(currentImageUrl);
-        // } else {
-        //     // Eliminar img del storage
-        //     favImagesJSON.urls = favImagesJSON.urls.filter((value) => { return value !== currentImageUrl});
-        // }
+        if (newFavStatus) {
+            // Agregar img al storage
+            favImagesJSON.urls.push(currentImageUrl);
+        } else {
+            // Eliminar img del storage
+            favImagesJSON.urls = favImagesJSON.urls.filter((value) => { return value !== currentImageUrl});
+        }
 
-        // await AsyncStorage.setItem('@favImagesJSON', JSON.stringify(favImagesJSON), ()=>{});
-        // setImageFavStatus(newFavStatus);
+        await AsyncStorage.setItem('@favImagesJSON', JSON.stringify(favImagesJSON), ()=>{});
+        setImageFavStatus(newFavStatus);
     }
 
     const config = {
@@ -82,14 +85,7 @@ export default function Discover({ navigation }) {
      */
     return (
         <View style={styles.main}>
-            <GestureRecognizer
-                onSwipeLeft={loadRandomImage}
-                config={config}
-                style={{
-                flex: 1,
-                backgroundColor: '#FFF'
-                }}
-            >
+            
                 <TouchableOpacity onPress={imageTap} style={styles.touchableOpacity}>
                 { (currentImageUrl != null) && (
                     <View style={styles.imageHolder}>
@@ -109,7 +105,6 @@ export default function Discover({ navigation }) {
                     </View>
                 )}
                 </TouchableOpacity>
-            </GestureRecognizer>
 
             
             <View style={styles.footer}>
