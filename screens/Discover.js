@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from "react";
 import {StyleSheet, View, Button, Image, Dimensions, TouchableOpacity, Text} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-// import GestureRecognizer from 'react-native-swipe-gestures';
+import GestureRecognizer from 'react-native-swipe-gestures';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Discover({ navigation }) {
@@ -85,6 +85,14 @@ export default function Discover({ navigation }) {
      */
     return (
         <View style={styles.main}>
+            <GestureRecognizer
+                onSwipeLeft={loadRandomImage}
+                config={config}
+                style={{
+                flex: 1,
+                backgroundColor: '#FFF'
+                }}
+            >
             
                 <TouchableOpacity onPress={imageTap} style={styles.touchableOpacity}>
                 { (currentImageUrl != null) && (
@@ -105,6 +113,7 @@ export default function Discover({ navigation }) {
                     </View>
                 )}
                 </TouchableOpacity>
+            </GestureRecognizer>
 
             
             <View style={styles.footer}>
