@@ -19,29 +19,48 @@ export default function Countries({ navigation }) {
         redirect: 'follow',
         mode: 'cors'
       };
+    const   arrayParaListar = (json) =>  {
+      json.sort(sortByProperty("Country"));
 
-       const   loadCountries =  () =>  {
+      var arrayCountries = [];
+    
+      for(var i in json) {    
+          var item = json[i];   
+      
+          arrayCountries.push({ 
+              "id"    : item.ISO2,
+              "name"  : item.Country,
+              "slug"  : item.Slug 
+          });
+      }
+      
+      console.log('aca:'+JSON.stringify(arrayCountries));
+       setListaPaises(arrayCountries)
+    }
+
+    //funcion que ordena un array por alguna columna
+    function sortByProperty(property){  
+      return function(a,b){  
+         if(a[property] > b[property])  
+            return 1;  
+         else if(a[property] < b[property])  
+            return -1;  
+     
+         return 0;  
+      }  
+   }
+
+    const   loadCountries =  () =>  {
         fetch('https://api.covid19api.com/countries', requestOptions)
         .then((response) => response.json())
-        .then((json) => setListaPaises(json))
+        .then((json) => {
+          //ordenar array json
+          arrayParaListar(json);
+          //setearlo
+          
+        })
         .catch((error) => console.error(error))
         .finally(() => setLoading(false));
-
-        // .then(async function (response){
-        //     // guardamos en el state la url de la foto random
-        //     setImageUrl(response.url);
-
-        //     // Hay que determinar si la imagen ya es favorita
-        //     const favImagesJSONStr = await AsyncStorage.getItem('@favImagesJSON', ()=>{});
-        //     const favImagesJSON = JSON.parse(favImagesJSONStr);
-        //     const randomImageFavStatus = favImagesJSON !== null && favImagesJSON.urls.includes(response.url);
-        //     if (randomImageFavStatus !== currentImageFavStatus) {
-        //         setImageFavStatus(randomImageFavStatus);
-        //     }
-
-        // });
-
-        
     };
 
 
