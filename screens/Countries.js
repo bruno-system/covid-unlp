@@ -2,12 +2,13 @@ import React , {useState, useEffect} from 'react';
 import { Image, StyleSheet, Text, View, ActivityIndicator, FlatList,SafeAreaView, StatusBar  } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import SearchableDropdown from 'react-native-searchable-dropdown';
+import { TextInput } from 'react-native-paper';
 
 export default function Countries({ navigation }) {
     
     const [isLoading, setLoading] = useState(true);
     const [listaPaises, setListaPaises] = useState([]);
+    const [listaFiltrada, setListaFiltrada] = useState([]);
 
     useEffect(() => {
         // Se ejecuta cuando se monta el componente
@@ -34,8 +35,9 @@ export default function Countries({ navigation }) {
           });
       }
       
-      console.log('aca:'+JSON.stringify(arrayCountries));
+      //console.log('aca:'+JSON.stringify(arrayCountries));
        setListaPaises(arrayCountries)
+       setListaFiltrada(arrayCountries)
     }
 
     //funcion que ordena un array por alguna columna
@@ -51,7 +53,8 @@ export default function Countries({ navigation }) {
    }
 
     const   loadCountries =  () =>  {
-        fetch('https://api.covid19api.com/countries', requestOptions)
+        let url ="https://api.covid19api.com/countries"
+        fetch(url, requestOptions)
         .then((response) => response.json())
         .then((json) => {
           //ordenar array json
@@ -63,74 +66,52 @@ export default function Countries({ navigation }) {
         .finally(() => setLoading(false));
     };
 
+  function onChangeText(text){
+    console.log('textCHanged ',text);
+    let filterArray = listaPaises
+    let searchResult = filterArray.filter( pais => 
+      pais.name.toLowerCase().includes(text.toLowerCase())
+    )
 
+    setListaFiltrada(searchResult)
+  }
 
 
   return ( 
     <View style={styles.container}>
+      {/* HEADER */}
       <Image source={{ uri: "https://i.imgur.com/TkIrScD.png" }} style={styles.logo} />
 
       <Text style={styles.instructions} >
         To share a photo from your phone with a friend, just press the button below!
       </Text>
 
+      {/* SHEARCH BAR */}
+      <View>
+        <TextInput 
+          placeholder="Buscar" 
+          onChangeText={text => onChangeText(text) }
+        />
+      </View>
 
+      {/* List  */}
       {isLoading ? <ActivityIndicator/> : (
 
 
         <SafeAreaView style={styles.container}>
 
-          {/* <FlatList
-            data={listaPaises}
-            keyExtractor={item => item.ISO2}
+           <FlatList
+            data={listaFiltrada}
+            // keyExtractor={item => item.id}
+            ListEmptyComponent={() => 
+              <View>
+                <Text>Sin Datos</Text>
+              </View>
+            }
             renderItem={({ item }) => (
-              <Text>{item.Country}, {item.Slug}</Text>
+              <Text>{item.name}, {item.id}</Text>
             )}
-          /> */}
-
-
-            <SearchableDropdown
-              onTextChange={(text) => console.log(text)}
-              //On text change listner on the searchable input
-              onItemSelect={(item) => alert(JSON.stringify(item))}
-              //onItemSelect called after the selection from the dropdown
-              containerStyle={{ padding: 5 }}
-              //suggestion container style
-              textInputStyle={{
-                //inserted text style
-                padding: 12,
-                borderWidth: 1,
-                borderColor: '#ccc',
-                backgroundColor: '#FAF7F6',
-              }}
-              itemStyle={{
-                //single dropdown item style
-                padding: 10,
-                marginTop: 2,
-                backgroundColor: '#FAF9F8',
-                borderColor: '#bbb',
-                borderWidth: 1,
-              }}
-              itemTextStyle={{
-                //text style of a single dropdown item
-                color: '#222',
-              }}
-              itemsContainerStyle={{
-                //items container style you can pass maxHeight
-                //to restrict the items dropdown hieght
-                maxHeight: '60%',
-              }}
-              items={listaPaises}
-              //mapping of item array
-              // defaultIndex={2}
-              //default selected item index
-              placeholder="placeholder"
-              //place holder for the search input
-              resetValue={false}
-              //reset textInput Value with true and false state
-              underlineColorAndroid="transparent"
-              //To remove the underline from the android input
-            />
+          /> 
 
         </SafeAreaView>
 
@@ -149,6 +130,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: StatusBar.currentHeight || 0,
+    height: 100
   },
   logo: {
     width: 305,
