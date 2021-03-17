@@ -2,13 +2,16 @@ import React , {useState, useEffect} from 'react';
 import { Image, StyleSheet, Text, View, ActivityIndicator, FlatList,SafeAreaView, StatusBar  } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { TextInput } from 'react-native-paper';
+import {  Card,List, Searchbar  } from 'react-native-paper';
+import  CountrieDetails  from "./CountrieDeails";
+
 
 export default function Countries({ navigation }) {
     
     const [isLoading, setLoading] = useState(true);
     const [listaPaises, setListaPaises] = useState([]);
     const [listaFiltrada, setListaFiltrada] = useState([]);
+    const [campoDeBusqueda, setCampoDeBusqueda] = useState('');
 
     useEffect(() => {
         // Se ejecuta cuando se monta el componente
@@ -68,6 +71,7 @@ export default function Countries({ navigation }) {
 
   function onChangeText(text){
     console.log('textCHanged ',text);
+    setCampoDeBusqueda(text)
     let filterArray = listaPaises
     let searchResult = filterArray.filter( pais => 
       pais.name.toLowerCase().includes(text.toLowerCase())
@@ -76,29 +80,38 @@ export default function Countries({ navigation }) {
     setListaFiltrada(searchResult)
   }
 
+  function itemSelected (id){
+    console.log(id);
+  }
 
-  return ( 
-    <View style={styles.container}>
+
+  return (
+    <View > 
       {/* HEADER */}
-      <Image source={{ uri: "https://i.imgur.com/TkIrScD.png" }} style={styles.logo} />
-
+      <Card> 
+        <Card.Cover source={{ uri: "https://i.imgur.com/TkIrScD.png" }} />
+      </Card>
+      <CountrieDetails id="Papá" />
       <Text style={styles.instructions} >
         To share a photo from your phone with a friend, just press the button below!
       </Text>
 
       {/* SHEARCH BAR */}
       <View>
-        <TextInput 
-          placeholder="Buscar" 
-          onChangeText={text => onChangeText(text) }
-        />
-      </View>
 
+        <Searchbar
+          placeholder="Buscar"
+          onChangeText={text => onChangeText(text) }
+          value={campoDeBusqueda}
+        />
+
+      </View>
+      
       {/* List  */}
       {isLoading ? <ActivityIndicator/> : (
 
 
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView >
 
            <FlatList
             data={listaFiltrada}
@@ -109,7 +122,14 @@ export default function Countries({ navigation }) {
               </View>
             }
             renderItem={({ item }) => (
-              <Text>{item.name}, {item.id}</Text>
+              
+              <List.Item
+                title={item.name}
+                description=""
+                onPress={() => itemSelected(item.id) }
+                right={props => <List.Icon {...props} icon="plus-circle-outline" />}
+              />
+              
             )}
           /> 
 
