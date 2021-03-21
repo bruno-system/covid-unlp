@@ -2,9 +2,9 @@ import React , {useState, useEffect} from 'react';
 import { Image, StyleSheet, Text, View, ActivityIndicator, FlatList,SafeAreaView, StatusBar  } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {  Card,List, Searchbar  } from 'react-native-paper';
+import {  Card,List, Searchbar, Badge, Title, Paragraph   } from 'react-native-paper';
 import  CountrieDetails  from "./CountrieDeails";
-
+import { ImageHeader } from '../assets/header-logo.png';
 
 export default function Countries({ navigation }) {
     
@@ -89,12 +89,15 @@ export default function Countries({ navigation }) {
     <View > 
       {/* HEADER */}
       <Card> 
-        <Card.Cover source={{ uri: "https://i.imgur.com/TkIrScD.png" }} />
+        <Card.Cover source={require('../assets/header-logo.png')}  />
       </Card>
-      <CountrieDetails id="Papá" />
-      <Text style={styles.instructions} >
-        To share a photo from your phone with a friend, just press the button below!
-      </Text>
+      
+      <Card>
+        <Card.Content>
+          <Paragraph>Enfoques de desarrollo de aplicaciones moviles</Paragraph>
+        </Card.Content>
+      </Card>
+      
 
       {/* SHEARCH BAR */}
       <View>
@@ -138,7 +141,7 @@ export default function Countries({ navigation }) {
 
       )}
 
-
+<CountrieDetails id="Papá" />
     </View>
   );
 }
