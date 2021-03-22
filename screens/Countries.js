@@ -81,7 +81,6 @@ export default function Countries({ navigation }) {
      });
 
      navigation.navigate('CountryDetails' , { id })
-     console.log(modalVisible)
     
     
   }

@@ -33,7 +33,7 @@ export default function CountryDetails({ navigation, route }) {
            setLoading(false);
     }
 
-    const   loadOneCountry = async (id) =>  { console.log(id)
+    const   loadOneCountry = async (id) =>  { 
         let url ="https://api.covid19api.com/total/country/"+id
         let result = await fetch(url)
         .then((response) => response.json())
@@ -41,7 +41,7 @@ export default function CountryDetails({ navigation, route }) {
           return json.sort(userUtils.sortByPropertyDesc("Date"))[0]
         }) 
         .catch((error) => console.error(error))
-        .finally(() => console.log('fin')
+        .finally(() => console.log('datos del pais cargados')
             //setLoading(false)
         );
         return result;
