@@ -1,12 +1,12 @@
 import React, {useEffect, useState} from "react";
-import {View, Dimensions, ScrollView, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import {View, Dimensions, ScrollView, StyleSheet, Image,Text, TouchableOpacity} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const DEVICE_WIDTH = Dimensions.get('window').width;
 const COLUMN_WIDTH = Math.floor(DEVICE_WIDTH / 4);
 const IMAGE_WIDTH = COLUMN_WIDTH - 2;
 
-export default function History() {
+export default function History({ navigation, route }) {
     const [favIds, setFavIds] = useState([]);
 
     useEffect(() => {
@@ -50,6 +50,7 @@ export default function History() {
 
     return (
         <View style={styles.main}>
+            <Text>This is {route.params.id}'s profile</Text>
             <ScrollView contentContainerStyle={styles.imgGalleryContainer}>
                 {favIds.map((imageId, index) => (
                     <View style={styles.itemGallery} key={index}>

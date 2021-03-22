@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Discover from "./screens/Discover";
 import History from "./screens/History";
 import Countries from "./screens/Countries";
+import CountryDetails from "./screens/CountryDetails";
 import { DefaultTheme,DarkTheme, Provider as PaperProvider } from 'react-native-paper';
 
 const Stack = createStackNavigator();
@@ -25,6 +26,7 @@ export default function App() {
             <NavigationContainer>
                 <Stack.Navigator initialRouteName="Countries">
                     <Stack.Screen name="Countries" component={Countries} options={{ headerShown: false }}/>
+                    <Stack.Screen name="CountryDetails" component={CountryDetails} options={{ title: 'Información del Pais' }} />
                     <Stack.Screen name="History" component={History} />
                     <Stack.Screen name="Discover" component={Discover} />
                 </Stack.Navigator>

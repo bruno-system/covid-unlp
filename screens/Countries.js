@@ -1,17 +1,21 @@
 import React , {useState, useEffect} from 'react';
-import { Image, StyleSheet, Text, View, ActivityIndicator, FlatList,SafeAreaView, StatusBar  } from 'react-native';
+import { Image, StyleSheet, Text, View, ActivityIndicator, FlatList,SafeAreaView, StatusBar, Vibration  } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {  Card,List, Searchbar, Badge, Title, Paragraph   } from 'react-native-paper';
+import {  Card,List, Searchbar, Badge, Title, Paragraph, Subheading, Button   } from 'react-native-paper';
 import  CountrieDetails  from "./CountrieDeails";
-import { ImageHeader } from '../assets/header-logo.png';
+import userUtils from "../utils/sort";
 
 export default function Countries({ navigation }) {
     
     const [isLoading, setLoading] = useState(true);
     const [listaPaises, setListaPaises] = useState([]);
     const [listaFiltrada, setListaFiltrada] = useState([]);
+
     const [campoDeBusqueda, setCampoDeBusqueda] = useState('');
+
+    const [countrySelected, setCountrySelected] = useState();
+    const [modalVisible, setModalVisible] = useState(false);
 
     useEffect(() => {
         // Se ejecuta cuando se monta el componente
@@ -23,8 +27,9 @@ export default function Countries({ navigation }) {
         redirect: 'follow',
         mode: 'cors'
       };
+
     const   arrayParaListar = (json) =>  {
-      json.sort(sortByProperty("Country"));
+      json.sort(userUtils.sortByPropertyAsc("Country"));
 
       var arrayCountries = [];
     
@@ -43,34 +48,21 @@ export default function Countries({ navigation }) {
        setListaFiltrada(arrayCountries)
     }
 
-    //funcion que ordena un array por alguna columna
-    function sortByProperty(property){  
-      return function(a,b){  
-         if(a[property] > b[property])  
-            return 1;  
-         else if(a[property] < b[property])  
-            return -1;  
-     
-         return 0;  
-      }  
-   }
-
-    const   loadCountries =  () =>  {
-        let url ="https://api.covid19api.com/countries"
-        fetch(url, requestOptions)
-        .then((response) => response.json())
-        .then((json) => {
-          //ordenar array json
-          arrayParaListar(json);
-          //setearlo
-          
-        })
-        .catch((error) => console.error(error))
-        .finally(() => setLoading(false));
-    };
+  const   loadCountries =  () =>  {
+      let url ="https://api.covid19api.com/countries"
+      fetch(url, requestOptions)
+      .then((response) => response.json())
+      .then((json) => {
+        //ordenar array json
+        arrayParaListar(json);
+        //setearlo
+        
+      })
+      .catch((error) => console.error(error))
+      .finally(() => setLoading(false));
+  };
 
   function onChangeText(text){
-    console.log('textCHanged ',text);
     setCampoDeBusqueda(text)
     let filterArray = listaPaises
     let searchResult = filterArray.filter( pais => 
@@ -80,12 +72,35 @@ export default function Countries({ navigation }) {
     setListaFiltrada(searchResult)
   }
 
-  function itemSelected (id){
-    console.log(id);
+   function  onItemSelected (id){
+    Vibration.vibrate(30);
+     loadOneCountry(id).then((result) => {
+      setCountrySelected(result);
+      setModalVisible(true);
+      
+     });
+
+     navigation.navigate('CountryDetails' , { id })
+     console.log(modalVisible)
+    
+    
   }
 
+  const   loadOneCountry = async (id) =>  {
+    let url ="https://api.covid19api.com/total/country/"+id
+    let result = await fetch(url, requestOptions)
+    .then((response) => response.json())
+    .then(async function (json){
+      return json.sort(userUtils.sortByPropertyDesc("Date"))[0]
+    }) 
+    .catch((error) => console.error(error))
+    .finally(() => setLoading(false));
 
-  return (
+    return result;
+};
+
+
+  return ( 
     <View > 
       {/* HEADER */}
       <Card> 
@@ -121,7 +136,10 @@ export default function Countries({ navigation }) {
             // keyExtractor={item => item.id}
             ListEmptyComponent={() => 
               <View>
-                <Text>Sin Datos</Text>
+                
+                <Button icon="emoticon-frown-outline" color={"green"}>
+                  Sin Datos
+                </Button>
               </View>
             }
             renderItem={({ item }) => (
@@ -129,7 +147,7 @@ export default function Countries({ navigation }) {
               <List.Item
                 title={item.name}
                 description=""
-                onPress={() => itemSelected(item.id) }
+                onPress={() => onItemSelected(item.id) }
                 right={props => <List.Icon {...props} icon="plus-circle-outline" />}
               />
               
@@ -141,7 +159,7 @@ export default function Countries({ navigation }) {
 
       )}
 
-<CountrieDetails id="Papá" />
+      <CountrieDetails id="Papá" visible={modalVisible}  />
     </View>
   );
 }
