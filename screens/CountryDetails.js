@@ -9,6 +9,7 @@ const COLUMN_WIDTH = Math.floor(DEVICE_WIDTH / 4);
 const IMAGE_WIDTH = COLUMN_WIDTH - 2;
 
 import userUtils from "../utils/sort";
+import moment from "moment";
 
 export default function CountryDetails({ navigation, route }) {
     const [favIds, setFavIds] = useState([]);
@@ -86,7 +87,7 @@ export default function CountryDetails({ navigation, route }) {
                 <SafeAreaView >
                     <Card.Title
                         title={countryData.Country}
-                        subtitle={countryData.Date}
+                        subtitle={moment(countryData.Date).format("DD/MM/YYYY")}
                         left={(props) => <Avatar.Icon {...props} icon="map-marker-outline" color={"white"} />}
                         right={(props) => <IconButton  {...props} icon="star-outline" onPress={() => {}} />}
                     />
