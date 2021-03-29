@@ -3,7 +3,6 @@ import { Image, StyleSheet, Text, View, ActivityIndicator, FlatList,SafeAreaView
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {  Card,List, Searchbar, Badge, Title, Paragraph, Subheading, Button   } from 'react-native-paper';
-import  CountrieDetails  from "./CountrieDeails";
 import userUtils from "../utils/sort";
 
 export default function Countries({ navigation }) {
@@ -158,7 +157,6 @@ export default function Countries({ navigation }) {
 
       )}
 
-      <CountrieDetails id="Papá" visible={modalVisible}  />
     </View>
   );
 }

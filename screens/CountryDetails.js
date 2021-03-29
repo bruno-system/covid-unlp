@@ -1,5 +1,7 @@
 import React, {useEffect, useState} from "react";
-import {View, Dimensions, ScrollView, StyleSheet,SafeAreaView, Image,Text, TouchableOpacity, Vibration, ActivityIndicator} from 'react-native';
+import {View, Dimensions, ScrollView, StyleSheet,SafeAreaView,
+     Image,Text, TouchableOpacity, Vibration, ActivityIndicator
+    } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Avatar, Card, IconButton, DataTable  } from 'react-native-paper';
@@ -10,6 +12,7 @@ const IMAGE_WIDTH = COLUMN_WIDTH - 2;
 
 import userUtils from "../utils/sort";
 import moment from "moment";
+import { LineChart } from "react-native-chart-kit";
 
 export default function CountryDetails({ navigation, route }) {
     const [favIds, setFavIds] = useState([]);
@@ -17,74 +20,82 @@ export default function CountryDetails({ navigation, route }) {
     const [countryData, setCountryData] = useState({});
     const [isLoading, setLoading] = useState(true);
 
+    const [countryDataChart, setCountryDataChart] = useState([]);
+    const [arrayLabels, setArrayLabels] = useState([]);
+    const [arrayValue, setArrayValue] = useState([]);
+
     useEffect(() => {
         // Se ejecuta cuando se monta el componente
-        loadFavImages().then(()=>{});
         mainLoader(route.params.id);
     }, []);
 
     async function mainLoader(id){
-
         await loadOneCountry(id).then((result) => {
-            setCountryData(result);
+            setCountryData(result.last);  
+            setCountryDataChart(result.history);
             
-           });
-
-           setLoading(false);
+            cargaDeArrays(result.history);
+            setLoading(false);
+        });
+        
+        //await cargaDeArrays(countryDataChart);
+        
     }
 
     const   loadOneCountry = async (id) =>  { 
-        let url ="https://api.covid19api.com/total/country/"+id
+        let from="2021-03-24";
+        let to=moment().format('YYYY-MM-DD');
+        let url ="https://api.covid19api.com/total/country/"+id+"?from="+from+"T00:00:00Z&to="+to+"T00:00:00Z"
         let result = await fetch(url)
         .then((response) => response.json())
         .then(async function (json){
-          return json.sort(userUtils.sortByPropertyDesc("Date"))[0]
+
+            let dataReturn ={ "history": json,
+                              "last": json.sort(userUtils.sortByPropertyDesc("Date"))[0]
+                            }
+
+            //return json.sort(userUtils.sortByPropertyDesc("Date"))[0]
+            
+            return dataReturn;
+            
         }) 
         .catch((error) => console.error(error))
         .finally(() => console.log('datos del pais cargados')
             //setLoading(false)
         );
+        
         return result;
     };
 
-    const loadFavImages = async () => {
-        const favImagesJSONStr = await AsyncStorage.getItem('@favImagesJSON', () => {});
-        const favImagesJSON = JSON.parse(favImagesJSONStr);
-
-        if (favImagesJSON === null) return;
-
-        let imageIds = favImagesJSON.urls.map(function(url) {
-            // cada url tiene el formato https://i.picsum.photos/id/870/440/815.jpg?hmac=SJAQU7IJHknkN16N32Em58FCiDpPSkOy1tUx57Zv990
-            const urlParts = url.split("/");
-            return urlParts[4];
-        });
-
-        setFavIds(imageIds);
-    }
-
-    const eliminarImagen = async (idRemove) =>{
-        const favImagesJSONStr = await AsyncStorage.getItem('@favImagesJSON', () => {});
-        const favImagesJSON = JSON.parse(favImagesJSONStr);
-
-        if (favImagesJSON === null) return;
-
-        favImagesJSON.urls.map(async function(url, index ){ 
-            const urlParts = url.split("/");
-            if(urlParts[4] == idRemove){
-                await AsyncStorage.removeItem('@favImagesJSON',index, () => {})
-                console.log('eliminada:'+idRemove+' index: '+index)
-            }
-        });
+     const cargaDeArrays = async (json) =>  {
+        console.log(json.sort(userUtils.sortByPropertyAsc("Date")));
+        let arrayLabelsLocal = [];
+        let arrayValueLocal = [];
         
-        loadFavImages().then(()=>{});
+        // json.slice(Math.max(json.length - 5, 1))
+        //json= json.slice(-5);
+         for(var i in json) {    
+            var item = json[i];   
+
+            arrayLabelsLocal.push(  moment(item.Date).format("DD/MM") );
+            arrayValueLocal.push(item.Active);
+            //console.log(item.Date)
+        }
+         setArrayLabels(arrayLabelsLocal);
+         setArrayValue(arrayValueLocal);
+
+        // console.log(arrayLabelsLocal);
+        // console.log(arrayValue);
         
-        
-    }
+        //console.log('aca:'+JSON.stringify(arrayDates));
+      }
+
 
     return (
         <View style={styles.main}>
             {isLoading ? <ActivityIndicator size="large" color="green" /> : (
                 <SafeAreaView >
+                <ScrollView>
                     <Card.Title
                         title={countryData.Country}
                         subtitle={moment(countryData.Date).format("DD/MM/YYYY")}
@@ -119,6 +130,46 @@ export default function CountryDetails({ navigation, route }) {
                             </DataTable.Row>
 
                         </DataTable>
+
+
+                        <LineChart
+                            data={{
+                            labels: arrayLabels,
+                            datasets: [
+                                {
+                                data: arrayValue
+                                }
+                            ]
+                            }}
+                            width={Dimensions.get("window").width} // from react-native
+                            height={220}
+                            yAxisLabel=""
+                            yAxisSuffix=""
+                            yAxisInterval={1} // optional, defaults to 1
+                            chartConfig={{
+                                backgroundColor: "#4394DF",
+                                backgroundGradientFrom: "#68D161",
+                                backgroundGradientTo: "#15760F",
+                                decimalPlaces: 0, // optional, defaults to 2dp
+                                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                                labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                                style: {
+                                    borderRadius: 16
+                                },
+                                propsForDots: {
+                                    r: "6",
+                                    strokeWidth: "2",
+                                    stroke: "#ffa726"
+                                }
+                            }}
+                            bezier
+                            style={{
+                                marginVertical: 8,
+                                borderRadius: 16
+                            }}
+                        />
+
+            </ScrollView>
             </SafeAreaView>
             )}
         </View>
