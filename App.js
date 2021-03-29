@@ -24,7 +24,18 @@ export default function App() {
     return (
         <PaperProvider theme={theme}>
             <NavigationContainer>
-                <Stack.Navigator initialRouteName="Countries">
+                <Stack.Navigator 
+                    initialRouteName="Countries"
+                    screenOptions={{
+                        headerStyle: {
+                          backgroundColor: '#75BB4B',
+                        },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: {
+                          fontWeight: 'bold',
+                        },
+                      }}
+                    >
                     <Stack.Screen name="Countries" component={Countries} options={{ headerShown: false }}/>
                     <Stack.Screen name="CountryDetails" component={CountryDetails} options={{ title: 'Información del Pais' }} />
                     <Stack.Screen name="History" component={History} />

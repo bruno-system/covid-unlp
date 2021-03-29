@@ -4,7 +4,7 @@ import {View, Dimensions, ScrollView, StyleSheet,SafeAreaView,
     } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { Avatar, Card, IconButton, DataTable  } from 'react-native-paper';
+import { Avatar, Card, IconButton, DataTable, Title  } from 'react-native-paper';
 
 const DEVICE_WIDTH = Dimensions.get('window').width;
 const COLUMN_WIDTH = Math.floor(DEVICE_WIDTH / 4);
@@ -17,10 +17,22 @@ import { LineChart } from "react-native-chart-kit";
 export default function CountryDetails({ navigation, route }) {
     const [favIds, setFavIds] = useState([]);
 
-    const [countryData, setCountryData] = useState({});
+    const [countryData, setCountryData] = useState(
+        {"Country": "-",
+        "CountryCode": "",
+        "Province": "",
+        "City": "",
+        "CityCode": "",
+        "Lat": "0",
+        "Lon": "0",
+        "Confirmed": 0,
+        "Deaths": 0,
+        "Recovered": 0,
+        "Active": 0,
+        "Date": ""});
+
     const [isLoading, setLoading] = useState(true);
 
-    const [countryDataChart, setCountryDataChart] = useState([]);
     const [arrayLabels, setArrayLabels] = useState([]);
     const [arrayValue, setArrayValue] = useState([]);
 
@@ -32,18 +44,16 @@ export default function CountryDetails({ navigation, route }) {
     async function mainLoader(id){
         await loadOneCountry(id).then((result) => {
             setCountryData(result.last);  
-            setCountryDataChart(result.history);
             
             cargaDeArrays(result.history);
             setLoading(false);
         });
         
-        //await cargaDeArrays(countryDataChart);
-        
     }
 
     const   loadOneCountry = async (id) =>  { 
-        let from="2021-03-24";
+        let days=7
+        let from=moment().subtract(days, 'days').format('YYYY-MM-DD');
         let to=moment().format('YYYY-MM-DD');
         let url ="https://api.covid19api.com/total/country/"+id+"?from="+from+"T00:00:00Z&to="+to+"T00:00:00Z"
         let result = await fetch(url)
@@ -68,7 +78,7 @@ export default function CountryDetails({ navigation, route }) {
     };
 
      const cargaDeArrays = async (json) =>  {
-        console.log(json.sort(userUtils.sortByPropertyAsc("Date")));
+        json.sort(userUtils.sortByPropertyAsc("Date"));
         let arrayLabelsLocal = [];
         let arrayValueLocal = [];
         
@@ -79,13 +89,9 @@ export default function CountryDetails({ navigation, route }) {
 
             arrayLabelsLocal.push(  moment(item.Date).format("DD/MM") );
             arrayValueLocal.push(item.Active);
-            //console.log(item.Date)
         }
          setArrayLabels(arrayLabelsLocal);
          setArrayValue(arrayValueLocal);
-
-        // console.log(arrayLabelsLocal);
-        // console.log(arrayValue);
         
         //console.log('aca:'+JSON.stringify(arrayDates));
       }
@@ -130,8 +136,7 @@ export default function CountryDetails({ navigation, route }) {
                             </DataTable.Row>
 
                         </DataTable>
-
-
+                        <Title style={styles.title}>Activos</Title>
                         <LineChart
                             data={{
                             labels: arrayLabels,
@@ -197,5 +202,8 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "#fff",
         margin: 'auto'
+    },
+    title: {
+        textAlign:"center"
     }
 });
