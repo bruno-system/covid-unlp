@@ -17,17 +17,48 @@ export default function Countries({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
 
     useEffect(() => {
-        // Se ejecuta cuando se monta el componente
-        loadCountries(); 
+        //Se ejecutan cuando se monta el componente
+        loadCountries();    
     }, []);
 
-    var requestOptions = {
-        method: 'GET',
-        redirect: 'follow',
-        mode: 'cors'
-      };
+    const   loadCountries =  () =>  {
+      let url ="https://api.covid19api.com/countries3"
+      fetch(url)
+      .then((response) => response.json())
+      .then(async (json) => {
+        //ordenar array json
+        arrayParaListar(json);
+      })
+      .catch((error) => {
+          console.error(error); 
+        })
+      .finally(() => setLoading(false));
+    };
 
-    const   arrayParaListar = (json) =>  {
+    const arrayParaListar = async (json) =>  {
+
+      //Verifico estado del JSON----------------
+      if(json.length > 1 ){
+        //actualiza store
+        console.log("online");
+        await AsyncStorage.setItem("@arrayCountries", JSON.stringify(json));
+        
+      }else{
+        //carga datos del store
+        console.log("offline");
+        let arrayStorage = await AsyncStorage.getItem('@arrayCountries3').then((rsp) =>  {
+          return JSON.parse(rsp)  
+        });
+        console.log(arrayStorage)
+        //si existe inicializado en el storage
+        if(arrayStorage != null){
+          json=arrayStorage
+        }else {
+          json = []
+        }
+      }
+      //----------------------------------------
+
       json.sort(userUtils.sortByPropertyAsc("Country"));
 
       var arrayCountries = [];
@@ -42,24 +73,9 @@ export default function Countries({ navigation }) {
           });
       }
       
-      //console.log('aca:'+JSON.stringify(arrayCountries));
        setListaPaises(arrayCountries)
        setListaFiltrada(arrayCountries)
     }
-
-  const   loadCountries =  () =>  {
-      let url ="https://api.covid19api.com/countries"
-      fetch(url, requestOptions)
-      .then((response) => response.json())
-      .then((json) => {
-        //ordenar array json
-        arrayParaListar(json);
-        //setearlo
-        
-      })
-      .catch((error) => console.error(error))
-      .finally(() => setLoading(false));
-  };
 
   function onChangeText(text){
     setCampoDeBusqueda(text)
@@ -86,7 +102,7 @@ export default function Countries({ navigation }) {
 
   const   loadOneCountry = async (id) =>  {
     let url ="https://api.covid19api.com/total/country/"+id
-    let result = await fetch(url, requestOptions)
+    let result = await fetch(url)
     .then((response) => response.json())
     .then(async function (json){
       return json.sort(userUtils.sortByPropertyDesc("Date"))[0]
