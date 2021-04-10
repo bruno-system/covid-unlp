@@ -2,7 +2,7 @@ import React , {useState, useEffect} from 'react';
 import { Image, StyleSheet, Text, View, ActivityIndicator, FlatList,SafeAreaView, StatusBar, Vibration  } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {  Card,List, Searchbar, Badge, Title, Paragraph, Subheading, Button   } from 'react-native-paper';
+import {  Card,List, Searchbar, Badge, Title, Paragraph, Subheading, Button, Snackbar   } from 'react-native-paper';
 import userUtils from "../utils/sort";
 
 export default function Countries({ navigation }) {
@@ -13,8 +13,7 @@ export default function Countries({ navigation }) {
 
     const [campoDeBusqueda, setCampoDeBusqueda] = useState('');
 
-    const [countrySelected, setCountrySelected] = useState();
-    const [modalVisible, setModalVisible] = useState(false);
+    const [visibleOffline, setVisibleOffline] = useState(false);
 
     useEffect(() => {
         //Se ejecutan cuando se monta el componente
@@ -22,7 +21,7 @@ export default function Countries({ navigation }) {
     }, []);
 
     const   loadCountries =  () =>  {
-      let url ="https://api.covid19api.com/countries3"
+      let url ="https://api.covid19api.com/countries"
       fetch(url)
       .then((response) => response.json())
       .then(async (json) => {
@@ -40,16 +39,16 @@ export default function Countries({ navigation }) {
       //Verifico estado del JSON----------------
       if(json.length > 1 ){
         //actualiza store
-        console.log("online");
+        console.log("mode online");
         await AsyncStorage.setItem("@arrayCountries", JSON.stringify(json));
         
       }else{
         //carga datos del store
-        console.log("offline");
-        let arrayStorage = await AsyncStorage.getItem('@arrayCountries3').then((rsp) =>  {
+        console.log("mode offline");
+        setVisibleOffline(true)
+        let arrayStorage = await AsyncStorage.getItem('@arrayCountries').then((rsp) =>  {
           return JSON.parse(rsp)  
         });
-        console.log(arrayStorage)
         //si existe inicializado en el storage
         if(arrayStorage != null){
           json=arrayStorage
@@ -89,30 +88,12 @@ export default function Countries({ navigation }) {
 
    function  onItemSelected (id){
     Vibration.vibrate(30);
-     loadOneCountry(id).then((result) => {
-      setCountrySelected(result);
-      setModalVisible(true);
-      
-     });
-
-     navigation.navigate('CountryDetails' , { id })
+    navigation.navigate('CountryDetails' , { id })
     
     
   }
 
-  const   loadOneCountry = async (id) =>  {
-    let url ="https://api.covid19api.com/total/country/"+id
-    let result = await fetch(url)
-    .then((response) => response.json())
-    .then(async function (json){
-      return json.sort(userUtils.sortByPropertyDesc("Date"))[0]
-    }) 
-    .catch((error) => console.error(error))
-    .finally(() => setLoading(false));
-
-    return result;
-};
-
+const onDismissSnackBar = () => setVisibleOffline(false);
 
   return ( 
     <View > 
@@ -130,17 +111,32 @@ export default function Countries({ navigation }) {
 
       {/* SHEARCH BAR */}
       <View>
-
+      
         <Searchbar
           placeholder="Buscar"
           onChangeText={text => onChangeText(text) }
           value={campoDeBusqueda}
         />
 
+        <Snackbar
+          visible={visibleOffline}
+          onDismiss={onDismissSnackBar}
+          action={{
+            label: 'Entendido',
+            onPress: () => {
+              onDismissSnackBar()
+            },
+          }}>
+          Trabajando sin conexión
+        </Snackbar>
+        
+
       </View>
+
+      
       
       {/* List  */}
-      {isLoading ? <ActivityIndicator/> : (
+      {isLoading ? <ActivityIndicator size="large" color="green"/> : (
 
 
         <SafeAreaView >
@@ -172,6 +168,8 @@ export default function Countries({ navigation }) {
 
 
       )}
+      
+      
 
     </View>
   );
@@ -192,8 +190,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   instructions: {
-    color: '#888',
-    fontSize: 18,
-    marginHorizontal: 15,
+    //marginHorizontal: 15,
+    marginTop: 2,
+    position:'absolute'
   }, 
 });

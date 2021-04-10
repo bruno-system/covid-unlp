@@ -1,14 +1,9 @@
 import React, {useEffect, useState} from "react";
 import {View, Dimensions, ScrollView, StyleSheet,SafeAreaView,
-     Image,Text, TouchableOpacity, Vibration, ActivityIndicator
-    } from 'react-native';
+        Image,Text, TouchableOpacity, Vibration, ActivityIndicator
+        } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-import { Avatar, Card, IconButton, DataTable, Title  } from 'react-native-paper';
-
-const DEVICE_WIDTH = Dimensions.get('window').width;
-const COLUMN_WIDTH = Math.floor(DEVICE_WIDTH / 4);
-const IMAGE_WIDTH = COLUMN_WIDTH - 2;
+import { Avatar, Card, IconButton, DataTable, Title, Button,Paragraph,Dialog ,Portal  } from 'react-native-paper';
 
 import userUtils from "../utils/sort";
 import moment from "moment";
@@ -32,9 +27,9 @@ export default function CountryDetails({ navigation, route }) {
         "Date": ""});
 
     const [isLoading, setLoading] = useState(true);
-
     const [arrayLabels, setArrayLabels] = useState([]);
     const [arrayValue, setArrayValue] = useState([]);
+    const [isOffline, setIsOffline] = useState(false);
 
     useEffect(() => {
         // Se ejecuta cuando se monta el componente
@@ -42,13 +37,41 @@ export default function CountryDetails({ navigation, route }) {
     }, []);
 
     async function mainLoader(id){
-        await loadOneCountry(id).then((result) => {
-            setCountryData(result.last);  
-            
-            cargaDeArrays(result.history);
-            setLoading(false);
+
+        let dataAPI = await loadOneCountry(id).then((result) => {
+            return result
         });
+
+        //si esta offline
+        if(dataAPI == null){  
+            //buscamos el pais en el storage
+            let countryNameId= '@'+id
+            let dataStorage = await AsyncStorage.getItem(countryNameId).then((rsp) =>  {
+                return JSON.parse(rsp)  
+            });
+            //si  existe en el storage
+            if(dataStorage != null){
+                //cargar con datos del storage
+                dataAPI = dataStorage
+                console.log("utilizando datos guardados")
+                setIsOffline(true)
+            }else {
+                //mostrar mensaje que no tiene datos
+                console.log("sin datos")
+            }
+        }else{
+        // si esta online actualizo el storage
+            console.log("actualizando storage")
+            let countryNameId= '@'+id ; 
+            await AsyncStorage.setItem(countryNameId, JSON.stringify(dataAPI));
+        }
+
+        if(dataAPI != null){
+            await setCountryData(dataAPI.last);  
+            await cargaDeArrays(dataAPI.history); // arrays necesario para graficar
+        }
         
+        setLoading(false);
     }
 
     const   loadOneCountry = async (id) =>  { 
@@ -59,18 +82,20 @@ export default function CountryDetails({ navigation, route }) {
         let result = await fetch(url)
         .then((response) => response.json())
         .then(async function (json){
+            var dataReturn= null
+            if(json.message == null ){ 
+                dataReturn = 
+                    { "history": json,
+                        "last": json.sort(userUtils.sortByPropertyDesc("Date"))[0]
+                    }
+            }
 
-            let dataReturn ={ "history": json,
-                              "last": json.sort(userUtils.sortByPropertyDesc("Date"))[0]
-                            }
-
-            //return json.sort(userUtils.sortByPropertyDesc("Date"))[0]
-            
             return dataReturn;
             
         }) 
-        .catch((error) => console.error(error))
-        .finally(() => console.log('datos del pais cargados')
+        .catch((error) => {console.error(error)
+            })
+        .finally(() => console.log('busqueda de datos finalizada')
             //setLoading(false)
         );
         
@@ -81,10 +106,8 @@ export default function CountryDetails({ navigation, route }) {
         json.sort(userUtils.sortByPropertyAsc("Date"));
         let arrayLabelsLocal = [];
         let arrayValueLocal = [];
-        
-        // json.slice(Math.max(json.length - 5, 1))
-        //json= json.slice(-5);
-         for(var i in json) {    
+
+        for(var i in json) {    
             var item = json[i];   
 
             arrayLabelsLocal.push(  moment(item.Date).format("DD/MM") );
@@ -93,15 +116,31 @@ export default function CountryDetails({ navigation, route }) {
          setArrayLabels(arrayLabelsLocal);
          setArrayValue(arrayValueLocal);
         
-        //console.log('aca:'+JSON.stringify(arrayDates));
       }
 
+    const onDismissSnackBar = () => setIsOffline(false);
 
     return (
         <View style={styles.main}>
+            
             {isLoading ? <ActivityIndicator size="large" color="green" /> : (
                 <SafeAreaView >
+                    
+                {countryData.Country != '-' ?  
                 <ScrollView>
+
+                    <Portal>
+                        <Dialog visible={isOffline} onDismiss={onDismissSnackBar}>
+                            <Dialog.Title> <Button icon="server-network-off" color={"green"}></Button> Sin Conexión</Dialog.Title>
+                            <Dialog.Content>
+                                <Paragraph>Utilizando datos de fecha: {moment(countryData.Date).format("DD/MM/YYYY")} </Paragraph>
+                            </Dialog.Content>
+                            <Dialog.Actions>
+                                <Button onPress={() => onDismissSnackBar() }>Entendido</Button>
+                            </Dialog.Actions>
+                        </Dialog>
+                    </Portal>
+
                     <Card.Title
                         title={countryData.Country}
                         subtitle={moment(countryData.Date).format("DD/MM/YYYY")}
@@ -137,6 +176,7 @@ export default function CountryDetails({ navigation, route }) {
 
                         </DataTable>
                         <Title style={styles.title}>Activos</Title>
+
                         <LineChart
                             data={{
                             labels: arrayLabels,
@@ -159,7 +199,7 @@ export default function CountryDetails({ navigation, route }) {
                                 color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
                                 labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
                                 style: {
-                                    borderRadius: 16
+                                    borderRadius: 16,
                                 },
                                 propsForDots: {
                                     r: "6",
@@ -170,11 +210,17 @@ export default function CountryDetails({ navigation, route }) {
                             bezier
                             style={{
                                 marginVertical: 8,
-                                borderRadius: 16
+                                borderRadius: 16,
+                                
                             }}
                         />
 
             </ScrollView>
+            : ( 
+                <Button icon="emoticon-frown-outline" color={"green"}>
+                  Sin Datos
+                </Button>
+              ) }
             </SafeAreaView>
             )}
         </View>
@@ -184,24 +230,7 @@ export default function CountryDetails({ navigation, route }) {
 const styles = StyleSheet.create({
     main: {
         flex: 1,
-    },
-    imgGalleryContainer: {
-        flex: 1,
-        flexDirection: "row",
-        flexWrap: "wrap",
-        alignContent: "flex-start"
-    },
-    itemGallery: {
-        width: COLUMN_WIDTH,
-        height: COLUMN_WIDTH,
-        alignContent: 'center',
-    },
-    imgGallery: {
-        width: IMAGE_WIDTH,
-        height: IMAGE_WIDTH,
-        borderWidth: 1,
-        borderColor: "#fff",
-        margin: 'auto'
+        zIndex:"unset"
     },
     title: {
         textAlign:"center"
