@@ -229,8 +229,7 @@ export default function CountryDetails({ navigation, route }) {
 
 const styles = StyleSheet.create({
     main: {
-        flex: 1,
-        zIndex:"unset"
+        flex: 1
     },
     title: {
         textAlign:"center"
