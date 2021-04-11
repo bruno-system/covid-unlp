@@ -2,7 +2,7 @@ import React , {useState, useEffect} from 'react';
 import { Image, StyleSheet, Text, View, ActivityIndicator, FlatList,SafeAreaView, StatusBar, Vibration  } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {  Card,List, Searchbar, Badge, Title, Paragraph, Subheading, Button, Snackbar   } from 'react-native-paper';
+import {  Card,List,Divider, Searchbar, Badge, Title, Paragraph, Subheading, Button, Snackbar   } from 'react-native-paper';
 import userUtils from "../utils/sort";
 
 export default function Countries({ navigation }) {
@@ -104,7 +104,14 @@ const onDismissSnackBar = () => setVisibleOffline(false);
       
       <Card>
         <Card.Content>
-          <Paragraph>Enfoques de desarrollo de aplicaciones moviles</Paragraph>
+        <Button 
+          dark={true} 
+          icon="star-box" 
+          color="#5f9867" 
+          mode="contained" 
+          onPress={() => navigation.navigate('Favorites')}>
+          Mis Favoritos
+        </Button>
         </Card.Content>
       </Card>
       
@@ -132,11 +139,9 @@ const onDismissSnackBar = () => setVisibleOffline(false);
         
 
       </View>
-
-      
       
       {/* List  */}
-      {isLoading ? <ActivityIndicator size="large" color="green"/> : (
+      {isLoading ? <ActivityIndicator style={styles.loader}  size="large" color="green"/> : (
 
 
         <SafeAreaView >
@@ -153,13 +158,15 @@ const onDismissSnackBar = () => setVisibleOffline(false);
               </View>
             }
             renderItem={({ item }) => (
-              
+              <View>
               <List.Item
                 title={item.name}
                 description=""
-                onPress={() => onItemSelected(item.id) }
+                onPress={() => onItemSelected(item.name) }
                 right={props => <List.Icon {...props} icon="plus-circle-outline" />}
               />
+              <Divider />
+              </View>
               
             )}
           /> 
@@ -184,14 +191,9 @@ const styles = StyleSheet.create({
     marginTop: StatusBar.currentHeight || 0,
     height: 100
   },
-  logo: {
-    width: 305,
-    height: 159,
-    marginBottom: 10,
-  },
-  instructions: {
-    //marginHorizontal: 15,
-    marginTop: 2,
-    position:'absolute'
-  }, 
+  loader: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop:'35%'
+  }
 });

@@ -1,16 +1,28 @@
 import React, {useEffect, useState} from "react";
 import {View, Dimensions, ScrollView, StyleSheet,SafeAreaView,
-        Image,Text, TouchableOpacity, Vibration, ActivityIndicator
+        Image,Text, Share, Vibration, ActivityIndicator
         } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Avatar, Card, IconButton, DataTable, Title, Button,Paragraph,Dialog ,Portal  } from 'react-native-paper';
+import { Avatar, 
+         Card, 
+         IconButton, 
+         DataTable, 
+         Title, 
+         Button,
+         Paragraph,
+         Dialog,
+         Portal, 
+         Divider 
+        } from 'react-native-paper';
 
 import userUtils from "../utils/sort";
 import moment from "moment";
 import { LineChart } from "react-native-chart-kit";
 
 export default function CountryDetails({ navigation, route }) {
-    const [favIds, setFavIds] = useState([]);
+
+    const [currentCountryName, setCountryName] = useState(route.params.id);
+    const [currentCountryFavStatus, setCountryFavStatus] = useState(false);
 
     const [countryData, setCountryData] = useState(
         {"Country": "-",
@@ -70,8 +82,41 @@ export default function CountryDetails({ navigation, route }) {
             await setCountryData(dataAPI.last);  
             await cargaDeArrays(dataAPI.history); // arrays necesario para graficar
         }
-        
+        verificarSiEsFavorito()
         setLoading(false);
+    }
+
+    const toggleFavStatus = async () => {
+        const newFavStatus = !currentCountryFavStatus;
+
+        const favCountriesJSONStr = await AsyncStorage.getItem('@favCountriesJSON', ()=>{});
+        let favCountriesJSON = JSON.parse(favCountriesJSONStr);
+        if (favCountriesJSON === null) {
+            favCountriesJSON = {
+                name: []
+            };
+        }
+
+        if (newFavStatus) {
+            // Agregar img al storage
+            favCountriesJSON.name.push(currentCountryName);
+        } else {
+            // Eliminar img del storage
+            favCountriesJSON.name = favCountriesJSON.name.filter((value) => { return value !== currentCountryName});
+        }
+
+        await AsyncStorage.setItem('@favCountriesJSON', JSON.stringify(favCountriesJSON), ()=>{});
+        setCountryFavStatus(newFavStatus);
+    }
+
+    async function verificarSiEsFavorito(){
+        // Hay que determinar si el pais ya es favorito
+        const favCountriesJSONStr = await AsyncStorage.getItem('@favCountriesJSON', ()=>{});
+        const favCountriesJSON = JSON.parse(favCountriesJSONStr);
+        const countryFavStatus = favCountriesJSON !== null && favCountriesJSON.name.includes(currentCountryName);
+        if (countryFavStatus !== currentCountryFavStatus) {
+            setCountryFavStatus(countryFavStatus);
+        }
     }
 
     const   loadOneCountry = async (id) =>  { 
@@ -83,13 +128,14 @@ export default function CountryDetails({ navigation, route }) {
         .then((response) => response.json())
         .then(async function (json){
             var dataReturn= null
+            //si no tengo mensaje entonces resolvio correctamente la consulta de la api
             if(json.message == null ){ 
                 dataReturn = 
                     { "history": json,
                         "last": json.sort(userUtils.sortByPropertyDesc("Date"))[0]
                     }
             }
-
+            
             return dataReturn;
             
         }) 
@@ -117,16 +163,41 @@ export default function CountryDetails({ navigation, route }) {
          setArrayValue(arrayValueLocal);
         
       }
+    const onShare = async () => {
+        try {
+          const result = await Share.share({
+            title: 'Datos de Covid: '+countryData.Country+" fecha: "+countryData.Date,
+            message:
+             '*Datos de Covid: '+countryData.Country+" fecha: "+moment(countryData.Date).format("DD/MM/YYYY")+'* | '+
+             " Total Confirmados: "+countryData.Confirmed+' | '+
+             " Total Activos: "+countryData.Active+' | '+
+             " Total Muertos: "+countryData.Deaths+' | '+
+             " Total Recuperados: "+countryData.Recovered+'  '
+             
+          }, { dialogTitle : 'Covid'});
+          if (result.action === Share.sharedAction) {
+            if (result.activityType) {
+              // shared with activity type of result.activityType
+            } else {
+              // shared
+            }
+          } else if (result.action === Share.dismissedAction) {
+            // dismissed
+          }
+        } catch (error) {
+          alert(error.message);
+        }
+    };
 
     const onDismissSnackBar = () => setIsOffline(false);
 
     return (
         <View style={styles.main}>
             
-            {isLoading ? <ActivityIndicator size="large" color="green" /> : (
+            {isLoading ? <ActivityIndicator style={styles.loader} size="large" color="green" /> : (
                 <SafeAreaView >
                     
-                {countryData.Country != '-' ?  
+                {countryData!=null && countryData.Country != '-' ?  
                 <ScrollView>
 
                     <Portal>
@@ -145,7 +216,12 @@ export default function CountryDetails({ navigation, route }) {
                         title={countryData.Country}
                         subtitle={moment(countryData.Date).format("DD/MM/YYYY")}
                         left={(props) => <Avatar.Icon {...props} icon="map-marker-outline" color={"white"} />}
-                        right={(props) => <IconButton  {...props} icon="star-outline" onPress={() => {}} />}
+                        right={
+                            (props) => <IconButton  {...props} 
+                            size={30}
+                            color={ currentCountryFavStatus === false ? "#000" : "#BDB80F" } 
+                            icon={ currentCountryFavStatus === false ? "star-outline" : "star" } 
+                            onPress={toggleFavStatus} />}
                     />
 
                         <DataTable>
@@ -175,8 +251,14 @@ export default function CountryDetails({ navigation, route }) {
                             </DataTable.Row>
 
                         </DataTable>
-                        <Title style={styles.title}>Activos</Title>
 
+                        <Button icon="share-variant" compact={true} mode="Outlined" onPress={() => onShare()}>
+                            Compartir
+                        </Button>
+                        <Divider />
+
+                        <Title style={styles.title}>Activos</Title>  
+                        
                         <LineChart
                             data={{
                             labels: arrayLabels,
@@ -213,7 +295,7 @@ export default function CountryDetails({ navigation, route }) {
                                 borderRadius: 16,
                                 
                             }}
-                        />
+                        />          
 
             </ScrollView>
             : ( 
@@ -233,5 +315,16 @@ const styles = StyleSheet.create({
     },
     title: {
         textAlign:"center"
-    }
+    },
+    loader: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingTop:'65%'
+    },
+    fab: {
+    position: 'relative',
+    margin: 16,
+    right: 0,
+    bottom: 10,
+    },
 });
