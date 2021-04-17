@@ -1,11 +1,10 @@
-import { StatusBar } from 'expo-status-bar';
 import React from "react";
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import Countries from "./screens/Countries";
 import CountryDetails from "./screens/CountryDetails";
 import Favorites from "./screens/Favorites";
-import { DefaultTheme,DarkTheme, Provider as PaperProvider } from 'react-native-paper';
+import { DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
 
 const Stack = createStackNavigator();
 

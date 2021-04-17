@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {View, Dimensions, ScrollView, StyleSheet,SafeAreaView,
-        Image,Text, Share, Vibration, ActivityIndicator
+        Share, ActivityIndicator
         } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Avatar, 
@@ -23,7 +23,6 @@ export default function CountryDetails({ navigation, route }) {
 
     const [currentCountryName, setCountryName] = useState(route.params.id);
     const [currentCountryFavStatus, setCountryFavStatus] = useState(false);
-
     const [countryData, setCountryData] = useState(
         {"Country": "-",
         "CountryCode": "",
@@ -41,7 +40,6 @@ export default function CountryDetails({ navigation, route }) {
         "NewDeaths" : 0,
         "NewRecovered": 0
     });
-
     const [isLoading, setLoading] = useState(true);
     const [arrayLabels, setArrayLabels] = useState([]);
     const [arrayValue, setArrayValue] = useState([]);
@@ -64,8 +62,7 @@ export default function CountryDetails({ navigation, route }) {
                     'NewConfirmed' : extraData.NewConfirmed,
                     'NewDeaths' : extraData.NewDeaths,
                     'NewRecovered': extraData.NewRecovered
-                }; 
-
+                };   
             return result
         });
 
@@ -150,9 +147,7 @@ export default function CountryDetails({ navigation, route }) {
                         "last": json.sort(userUtils.sortByPropertyDesc("Date"))[0]
                     }
             }
-            
             return dataReturn;
-            
         }) 
         .catch((error) => {console.error(error)
             })

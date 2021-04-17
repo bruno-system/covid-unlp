@@ -1,33 +1,17 @@
 import React , {useState, useEffect} from 'react';
-import { Image, 
-         StyleSheet, 
-         Text, 
+import { StyleSheet, 
          View, 
          ActivityIndicator, 
          FlatList,
-         SafeAreaView, 
-         StatusBar, 
-         Vibration 
-           } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
+         SafeAreaView,
+         Vibration } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {  Card,
-          List, 
-          Badge, 
-          Title, 
-          Paragraph, 
-          Subheading, 
-          Button, 
-          Snackbar,
-          Divider   } from 'react-native-paper';
-import userUtils from "../utils/sort";
+import {  List,  Button,  Divider   } from 'react-native-paper';
 
 export default function Favorites({ navigation, route }) {
     
     const [isLoading, setLoading] = useState(true);
     const [listaPaises, setListaPaises] = useState([]);
-
-    const [visibleOffline, setVisibleOffline] = useState(false);
 
     useEffect(() => {
         //refresca valores cuando vuelve de otra pantalla
@@ -46,21 +30,17 @@ export default function Favorites({ navigation, route }) {
         arrayFavCountries = favListJSON.name.map(function(country) {
           return { id: country, name: country}
         });
-
       };
         
       setListaPaises(arrayFavCountries);
       setLoading(false)
     };
 
-   function  onItemSelected (id){
-    Vibration.vibrate(30);
-    navigation.navigate('CountryDetails' , { id })
-    
-    
-  }
-
-const onDismissSnackBar = () => setVisibleOffline(false);
+    function  onItemSelected (id){
+      Vibration.vibrate(30);
+      navigation.navigate('CountryDetails' , { id })
+      
+    }
 
   return ( 
     <View > 
@@ -97,32 +77,16 @@ const onDismissSnackBar = () => setVisibleOffline(false);
           /> 
         </SafeAreaView>
 
-
       )}
       
-      
-
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: StatusBar.currentHeight || 0,
-    height: 100
-  },
   loader: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop:'35%'
-  },
-  instructions: {
-    //marginHorizontal: 15,
-    marginTop: 2,
-    position:'absolute'
-  }, 
+  }
 });

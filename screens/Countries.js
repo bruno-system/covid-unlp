@@ -1,26 +1,33 @@
 import React , {useState, useEffect} from 'react';
-import { Image, StyleSheet, Text, View, ActivityIndicator, FlatList,SafeAreaView, StatusBar, Vibration  } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import {  StyleSheet, View, ActivityIndicator, FlatList,SafeAreaView, Vibration  } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {  Card,List,Divider, Searchbar, Badge, Title, Paragraph, Subheading, Button, Snackbar   } from 'react-native-paper';
+import {  Card,List,Divider, Searchbar,Colors, Button, Snackbar, IconButton   } from 'react-native-paper';
 import userUtils from "../utils/sort";
+import NetInfo from '@react-native-community/netinfo';
 
 export default function Countries({ navigation }) {
     
     const [isLoading, setLoading] = useState(true);
     const [listaPaises, setListaPaises] = useState([]);
     const [listaFiltrada, setListaFiltrada] = useState([]);
-
     const [campoDeBusqueda, setCampoDeBusqueda] = useState('');
-
     const [visibleOffline, setVisibleOffline] = useState(false);
+    const [isConnected, setIsConnected] = useState(true);
 
     useEffect(() => {
-        //Se ejecutan cuando se monta el componente
-        loadCountries();    
-    }, []);
+      //escucho si esta con inet
+      const unsubscribe = NetInfo.addEventListener(state => {
+        console.log("Connection type", state.type);
+        console.log("Is connected?", state.isConnected);
+        setIsConnected(state.isConnected)
+      });
+      // Unsubscribe
+      unsubscribe();
+      loadCountries();   
+    
+    }, [NetInfo]);
 
-    const   loadCountries =  () =>  {
+    const loadCountries =  () =>  {
       let url ="https://api.covid19api.com/countries"
       fetch(url)
       .then((response) => response.json())
@@ -37,6 +44,7 @@ export default function Countries({ navigation }) {
     const arrayParaListar = async (json) =>  {
 
       //Verifico estado del JSON----------------
+      //json.length > 1  -> hay datos;   = 1  -> elemento con mensaje que no pudo resolver
       if(json.length > 1 ){
         //actualiza store
         console.log("mode online");
@@ -49,6 +57,7 @@ export default function Countries({ navigation }) {
         let arrayStorage = await AsyncStorage.getItem('@arrayCountries').then((rsp) =>  {
           return JSON.parse(rsp)  
         });
+
         //si existe inicializado en el storage
         if(arrayStorage != null){
           json=arrayStorage
@@ -57,10 +66,9 @@ export default function Countries({ navigation }) {
         }
       }
       //----------------------------------------
-
       json.sort(userUtils.sortByPropertyAsc("Country"));
 
-      var arrayCountries = [];
+      var arrayCountries = []; //Array para FlatList con una estructura requerida
     
       for(var i in json) {    
           var item = json[i];   
@@ -89,15 +97,35 @@ export default function Countries({ navigation }) {
    function  onItemSelected (id){
     Vibration.vibrate(30);
     navigation.navigate('CountryDetails' , { id })
-    
-    
+     
   }
 
-const onDismissSnackBar = () => setVisibleOffline(false);
+  const onDismissSnackBar = () => setVisibleOffline(false);
 
   return ( 
-    <View > 
+    <View> 
       {/* HEADER */}
+
+      {/* Icono OFFLINE/ONLINE */}
+      <Card style={styles.icon} elevation={0}>
+        {!isConnected ? 
+        <IconButton
+          icon="wifi-off"
+          color={Colors.orange500}
+          size={20}
+          onPress={() => (console.log('Pressed'))}
+        />
+        : (
+          <IconButton
+            icon="wifi"
+            color={Colors.green500}
+            size={20}
+            onPress={() => console.log('Pressed')}
+          />
+        )}
+      </Card>
+      {/* FIN Icono OFFLINE/ONLINE */}
+
       <Card> 
         <Card.Cover source={require('../assets/header-logo.png')}  />
       </Card>
@@ -115,7 +143,6 @@ const onDismissSnackBar = () => setVisibleOffline(false);
         </Card.Content>
       </Card>
       
-
       {/* SHEARCH BAR */}
       <View>
       
@@ -136,13 +163,11 @@ const onDismissSnackBar = () => setVisibleOffline(false);
           }}>
           Trabajando sin conexión
         </Snackbar>
-        
 
       </View>
       
-      {/* List  */}
+      {/* LOADER -> LIST  */}
       {isLoading ? <ActivityIndicator style={styles.loader}  size="large" color="green"/> : (
-
 
         <SafeAreaView >
 
@@ -150,8 +175,7 @@ const onDismissSnackBar = () => setVisibleOffline(false);
             data={listaFiltrada}
             // keyExtractor={item => item.id}
             ListEmptyComponent={() => 
-              <View>
-                
+              <View>      
                 <Button icon="emoticon-frown-outline" color={"green"}>
                   Sin Datos
                 </Button>
@@ -173,27 +197,21 @@ const onDismissSnackBar = () => setVisibleOffline(false);
 
         </SafeAreaView>
 
-
       )}
-      
-      
 
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: StatusBar.currentHeight || 0,
-    height: 100
-  },
   loader: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop:'35%'
+  },
+  icon: {
+    position:'absolute',
+    zIndex:6000,
+    marginTop:20
   }
 });
