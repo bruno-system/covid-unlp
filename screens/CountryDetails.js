@@ -36,7 +36,11 @@ export default function CountryDetails({ navigation, route }) {
         "Deaths": 0,
         "Recovered": 0,
         "Active": 0,
-        "Date": ""});
+        "Date": "",
+        "NewConfirmed": 0,
+        "NewDeaths" : 0,
+        "NewRecovered": 0
+    });
 
     const [isLoading, setLoading] = useState(true);
     const [arrayLabels, setArrayLabels] = useState([]);
@@ -50,7 +54,18 @@ export default function CountryDetails({ navigation, route }) {
 
     async function mainLoader(id){
 
-        let dataAPI = await loadOneCountry(id).then((result) => {
+        let dataAPI = await loadOneCountry(id).then(async (result) =>  {
+            //get extra data
+            let  extraData = await loadExtraCountryData(id).then((result) =>{
+                return result
+            })
+
+            result.last= {...result.last,
+                    'NewConfirmed' : extraData.NewConfirmed,
+                    'NewDeaths' : extraData.NewDeaths,
+                    'NewRecovered': extraData.NewRecovered
+                }; 
+
             return result
         });
 
@@ -148,6 +163,36 @@ export default function CountryDetails({ navigation, route }) {
         return result;
     };
 
+    const   loadExtraCountryData = async (id) =>  { 
+        let url ="https://api.covid19api.com/summary"
+        let result = await fetch(url)
+        .then((response) => response.json())
+        .then(async function (json){
+            var dataReturn= null
+            //si no tengo mensaje entonces resolvio correctamente la consulta de la api
+            if(json.message == null ){ 
+                json= getCountryByName(json.Countries,id)
+                dataReturn = json[0]
+            }
+            
+            return dataReturn;
+            
+        }) 
+        .catch((error) => {console.error(error)
+            })
+        .finally(() => console.log('busqueda de datos finalizada')
+            //setLoading(false)
+        );
+        
+        return result;
+    };
+
+    function getCountryByName(data,name) {
+        return data.filter(
+            function(data){ return data.Country == name }
+        );
+      }
+
      const cargaDeArrays = async (json) =>  {
         json.sort(userUtils.sortByPropertyAsc("Date"));
         let arrayLabelsLocal = [];
@@ -227,26 +272,31 @@ export default function CountryDetails({ navigation, route }) {
                         <DataTable>
                             <DataTable.Header>
                             <DataTable.Title>Categoría</DataTable.Title>
-                            <DataTable.Title numeric>Valor</DataTable.Title>
+                            <DataTable.Title numeric>Diarios</DataTable.Title>
+                            <DataTable.Title numeric>Total</DataTable.Title>
                             </DataTable.Header>
 
                             <DataTable.Row>
                             <DataTable.Cell>Confirmados</DataTable.Cell>
+                            <DataTable.Cell numeric>{countryData.NewConfirmed}</DataTable.Cell>
                             <DataTable.Cell numeric>{countryData.Confirmed}</DataTable.Cell>
                             </DataTable.Row>
 
                             <DataTable.Row>
                             <DataTable.Cell>Recuperados</DataTable.Cell>
+                            <DataTable.Cell numeric>{countryData.NewRecovered}</DataTable.Cell>
                             <DataTable.Cell numeric>{countryData.Recovered}</DataTable.Cell>
                             </DataTable.Row>
 
                             <DataTable.Row>
                             <DataTable.Cell>Activos</DataTable.Cell>
+                            <DataTable.Cell numeric> - </DataTable.Cell>
                             <DataTable.Cell numeric>{countryData.Active}</DataTable.Cell>
                             </DataTable.Row>
 
                             <DataTable.Row>
                             <DataTable.Cell>Muertos</DataTable.Cell> 
+                            <DataTable.Cell numeric>{countryData.NewDeaths}</DataTable.Cell>
                             <DataTable.Cell numeric>{countryData.Deaths}</DataTable.Cell>
                             </DataTable.Row>
 

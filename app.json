@@ -12,6 +12,10 @@
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "cover"
+    },
+    "android": {
+      "package": "com.unlp.bruno",
+      "versionCode": 1
     }
   }
 }

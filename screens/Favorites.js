@@ -30,24 +30,25 @@ export default function Favorites({ navigation, route }) {
     const [visibleOffline, setVisibleOffline] = useState(false);
 
     useEffect(() => {
-        //Se ejecutan cuando se monta el componente
-        loadCountries();  
+        //refresca valores cuando vuelve de otra pantalla
         const unsubscribe = navigation.addListener('focus', () => {
           loadCountries();
         });
         return unsubscribe;  
     }, [navigation]);
 
-     const loadCountries = async  () =>  {
+    const loadCountries = async  () =>  {
       const favListStr = await AsyncStorage.getItem('@favCountriesJSON', () => {});
       const favListJSON = JSON.parse(favListStr);
 
-      if (favListJSON === null) return;
-        
-      let arrayFavCountries = favListJSON.name.map(function(country) {
-            return { id: country, name: country}
+      let arrayFavCountries=null
+      if (favListJSON !== null) {
+        arrayFavCountries = favListJSON.name.map(function(country) {
+          return { id: country, name: country}
         });
 
+      };
+        
       setListaPaises(arrayFavCountries);
       setLoading(false)
     };
