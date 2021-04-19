@@ -21,11 +21,14 @@ export default function Countries({ navigation }) {
         console.log("Is connected?", state.isConnected);
         setIsConnected(state.isConnected)
       });
-      // Unsubscribe
-      unsubscribe();
-      loadCountries();   
+      loadCountries();
+      
+      return () => {
+        // Unsubscribe to network state updates
+        unsubscribe();
+      };
     
-    }, [NetInfo]);
+    }, []);
 
     const loadCountries =  () =>  {
       let url ="https://api.covid19api.com/countries"
@@ -44,7 +47,7 @@ export default function Countries({ navigation }) {
     const arrayParaListar = async (json) =>  {
 
       //Verifico estado del JSON----------------
-      //json.length > 1  -> hay datos;   = 1  -> elemento con mensaje que no pudo resolver
+      //json.length > 1  -> hay datos;   = 1  -> elemento con mensaje que no pudo resolver caso error 503
       if(json.length > 1 ){
         //actualiza store
         console.log("mode online");
@@ -107,7 +110,7 @@ export default function Countries({ navigation }) {
       {/* HEADER */}
 
       {/* Icono OFFLINE/ONLINE */}
-      <Card style={styles.icon} elevation={0}>
+      <Card style={styles.icon} elevation={1}>
         {!isConnected ? 
         <IconButton
           icon="wifi-off"
@@ -116,12 +119,16 @@ export default function Countries({ navigation }) {
           onPress={() => (console.log('Pressed'))}
         />
         : (
-          <IconButton
-            icon="wifi"
-            color={Colors.green500}
-            size={20}
-            onPress={() => console.log('Pressed')}
-          />
+          <>
+            <IconButton
+              icon="wifi"
+              color={Colors.green500}
+              size={20}
+              onPress={() => console.log('Pressed')}
+            />
+
+            <Button icon="reload" compact={true} dark={true} color={Colors.green400} mode="text" onPress={() => loadCountries() }>  </Button>
+          </>
         )}
       </Card>
       {/* FIN Icono OFFLINE/ONLINE */}
@@ -212,6 +219,8 @@ const styles = StyleSheet.create({
   icon: {
     position:'absolute',
     zIndex:6000,
-    marginTop:20
+    marginTop:15,
+    shadowColor:0,
+
   }
 });

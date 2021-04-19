@@ -18,6 +18,7 @@ import { Avatar,
 import userUtils from "../utils/sort";
 import moment from "moment";
 import { LineChart } from "react-native-chart-kit";
+import NetInfo from '@react-native-community/netinfo';
 
 export default function CountryDetails({ navigation, route }) {
 
@@ -46,25 +47,34 @@ export default function CountryDetails({ navigation, route }) {
     const [isOffline, setIsOffline] = useState(false);
 
     useEffect(() => {
-        // Se ejecuta cuando se monta el componente
         mainLoader(route.params.id);
     }, []);
 
     async function mainLoader(id){
-
-        let dataAPI = await loadOneCountry(id).then(async (result) =>  {
-            //get extra data
-            let  extraData = await loadExtraCountryData(id).then((result) =>{
-                return result
-            })
-
-            result.last= {...result.last,
-                    'NewConfirmed' : extraData.NewConfirmed,
-                    'NewDeaths' : extraData.NewDeaths,
-                    'NewRecovered': extraData.NewRecovered
-                };   
-            return result
-        });
+        
+        let dataAPI = null
+        //Verifico si tiene conexión
+        if( await isConnected()){ 
+            dataAPI = await loadOneCountry(id).then(async (result) =>  {
+                //get extra data
+                let  extraData = await loadExtraCountryData(id).then((result) =>{
+                    return result
+                })
+                let data=null
+                if(result !== null ){
+                    data=result
+                    if(extraData!==null){
+                        data.last= {...data.last,
+                            'NewConfirmed' : extraData.NewConfirmed,
+                            'NewDeaths' : extraData.NewDeaths,
+                            'NewRecovered': extraData.NewRecovered
+                        }; 
+                    }
+                }
+                 
+                return data
+            });
+        }
 
         //si esta offline
         if(dataAPI == null){  
@@ -97,6 +107,14 @@ export default function CountryDetails({ navigation, route }) {
         verificarSiEsFavorito()
         setLoading(false);
     }
+
+     const  isConnected = async () => {
+        return await  NetInfo.fetch().then(state => {
+            console.log("Connection type", state.type);
+            console.log("Is connected?", state.isConnected);
+            return  state.isConnected
+          });
+    };
 
     const toggleFavStatus = async () => {
         const newFavStatus = !currentCountryFavStatus;
@@ -149,8 +167,7 @@ export default function CountryDetails({ navigation, route }) {
             }
             return dataReturn;
         }) 
-        .catch((error) => {console.error(error)
-            })
+        .catch((error) => {console.error(error)})
         .finally(() => console.log('busqueda de datos finalizada')
             //setLoading(false)
         );
@@ -167,7 +184,10 @@ export default function CountryDetails({ navigation, route }) {
             //si no tengo mensaje entonces resolvio correctamente la consulta de la api
             if(json.message == null ){ 
                 json= getCountryByName(json.Countries,id)
-                dataReturn = json[0]
+                //hay 2 casos que  la API no tiene datos extra cargados
+                if(json.length >0){
+                    dataReturn = json[0]
+                } 
             }
             
             return dataReturn;
