@@ -1,9 +1,13 @@
 import React , {useState, useEffect} from 'react';
 import {  StyleSheet, View, ActivityIndicator, FlatList,SafeAreaView, Vibration  } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {  Card,List,Divider, Searchbar,Colors, Button, Snackbar, IconButton   } from 'react-native-paper';
+import {  Card,List,Divider, Searchbar,Colors,Avatar,
+          Button, Snackbar, IconButton, Portal, Dialog , Paragraph, Caption   } from 'react-native-paper';
 import userUtils from "../utils/sort";
 import NetInfo from '@react-native-community/netinfo';
+import {TextAnimationFadeIn, TextAnimationZoom, TextAnimationRain, 
+        TextAnimationSlideDown, TextAnimationSlideUp, TextAnimationSlideLeft, 
+        TextAnimationSlideRight, TextAnimationShake, TextAnimationReverse, TextAnimationDeZoom} from 'react-native-text-effects';
 
 export default function Countries({ navigation }) {
     
@@ -13,6 +17,7 @@ export default function Countries({ navigation }) {
     const [campoDeBusqueda, setCampoDeBusqueda] = useState('');
     const [visibleOffline, setVisibleOffline] = useState(false);
     const [isConnected, setIsConnected] = useState(true);
+    const [profileVisible, setProfileVisible] = React.useState(true);
 
     useEffect(() => {
       //escucho si esta con inet
@@ -104,11 +109,12 @@ export default function Countries({ navigation }) {
   }
 
   const onDismissSnackBar = () => setVisibleOffline(false);
+  const hideDialog = () => setProfileVisible(false);
+  const showDialog = () => setProfileVisible(true);
 
   return ( 
     <View> 
       {/* HEADER */}
-
       {/* Icono OFFLINE/ONLINE */}
       <Card style={styles.icon} elevation={1}>
         {!isConnected ? 
@@ -133,8 +139,21 @@ export default function Countries({ navigation }) {
       </Card>
       {/* FIN Icono OFFLINE/ONLINE */}
 
-      <Card> 
-        <Card.Cover source={require('../assets/header-logo.png')}  />
+      <Portal>
+        <Dialog visible={profileVisible} onDismiss={hideDialog} style={styles.profile}>
+          <Dialog.Content>
+            <Avatar.Image size={156} source={require('../assets/images/profile-pixel.png')} />
+            
+            
+            <Caption>Enfoques de desarrollo movil</Caption>
+            <TextAnimationFadeIn value={"Bruno Arnaldo Alvarado"} style={styles.profileText} delay={100} duration={100}  />
+          </Dialog.Content>
+        </Dialog>
+      </Portal>
+
+      <Card onPress={() => showDialog()}> 
+        <Card.Cover source={require('../assets/header-logo.png')}   />
+        
       </Card>
       
       <Card>
@@ -221,6 +240,14 @@ const styles = StyleSheet.create({
     zIndex:6000,
     marginTop:15,
     shadowColor:0,
-
+  },
+  profile: {
+    alignItems:'center',
+    backgroundColor:'#F3F6DD',
+    textAlign:"center"
+  },
+  profileText:{
+    fontSize:14,
+    color:'black'
   }
 });
