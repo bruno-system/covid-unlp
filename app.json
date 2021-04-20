@@ -6,7 +6,8 @@
     "slug": "covid-UNLP",
     "version": "1.0.0",
     "assetBundlePatterns": [
-      "**/*"
+      "**/*",
+      "assets/sounds/*.ogg"
     ],
     "icon":"./assets/icon.png",
     "splash": {

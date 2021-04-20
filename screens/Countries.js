@@ -5,9 +5,8 @@ import {  Card,List,Divider, Searchbar,Colors,Avatar,
           Button, Snackbar, IconButton, Portal, Dialog , Paragraph, Caption   } from 'react-native-paper';
 import userUtils from "../utils/sort";
 import NetInfo from '@react-native-community/netinfo';
-import {TextAnimationFadeIn, TextAnimationZoom, TextAnimationRain, 
-        TextAnimationSlideDown, TextAnimationSlideUp, TextAnimationSlideLeft, 
-        TextAnimationSlideRight, TextAnimationShake, TextAnimationReverse, TextAnimationDeZoom} from 'react-native-text-effects';
+import {TextAnimationFadeIn} from 'react-native-text-effects';
+
 
 export default function Countries({ navigation }) {
     
@@ -17,7 +16,7 @@ export default function Countries({ navigation }) {
     const [campoDeBusqueda, setCampoDeBusqueda] = useState('');
     const [visibleOffline, setVisibleOffline] = useState(false);
     const [isConnected, setIsConnected] = useState(true);
-    const [profileVisible, setProfileVisible] = React.useState(true);
+    const [profileVisible, setProfileVisible] = useState(false);
 
     useEffect(() => {
       //escucho si esta con inet
@@ -27,12 +26,10 @@ export default function Countries({ navigation }) {
         setIsConnected(state.isConnected)
       });
       loadCountries();
-      
       return () => {
         // Unsubscribe to network state updates
         unsubscribe();
-      };
-    
+      }
     }, []);
 
     const loadCountries =  () =>  {
@@ -109,8 +106,12 @@ export default function Countries({ navigation }) {
   }
 
   const onDismissSnackBar = () => setVisibleOffline(false);
-  const hideDialog = () => setProfileVisible(false);
-  const showDialog = () => setProfileVisible(true);
+  const hideDialog = () => {
+    setProfileVisible(false);
+  }
+  const showDialog = () => {
+    setProfileVisible(true);
+  }
 
   return ( 
     <View> 
